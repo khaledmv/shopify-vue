@@ -1,0 +1,52 @@
+<div class="gallery-template">
+  {% for block in section.blocks %}
+    {% case block.type %}
+      {% when 'slide' %}
+
+      {{ block.settings.slider_text }}
+      {{ block.settings.gallery_img | img_url: 'medium' | img_tag }}
+  {% else %}
+
+    {% endcase %}
+  {% endfor %}
+</div>
+
+
+{% schema %}
+  {
+    "name": "Gallery",
+    "settings": [],
+    "blocks": [
+      {
+        "name": "Slider",
+        "type": "slide",
+        "settings": [
+          {
+            "type": "text",
+            "id": "slider_text",
+            "label": "Slider text"
+          }, {
+            "type": "image_picker",
+            "id": "gallery_img",
+            "label": "Slide"
+          }
+        ]
+
+      }
+    ],
+
+    "presets": [
+      {
+        "category": "Custom Content",
+        "name": "Gallery",
+        "blocks": [
+          {
+            "type": "slide"
+          }, {
+            "type": "slide"
+          }
+        ]
+      }
+    ]
+  }
+{% endschema %}

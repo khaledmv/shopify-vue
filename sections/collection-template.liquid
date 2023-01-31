@@ -1,0 +1,91 @@
+<div class="text">
+
+  <div class="title">
+    {% if section.settings.text_id != blank %}
+      <h2>
+        {{ section.settings.text_id }}
+      </h2>
+    {% endif %}
+  </div>
+
+  <div class="slide">
+    {% for block in section.blocks %}
+      {% case block.type %}
+
+        {% when 'slide' %}
+
+        <div class="slide">
+          {{ block.settings.image_url | img_url: 'medium' | img_tag }}
+        </div>
+
+    {% else %}
+
+      {% endcase %}
+    {% endfor %}
+  </div>
+
+
+</div>
+
+
+{% paginate collection.products by 2 %}
+  {% for product in collection.products %}
+    <div>
+      <a href="{{ product.url | within: collection }}">{{ product.title }}</a>
+      {{ product.price | money }}
+      {% unless product.available %}<br><strong>sold out</strong>
+      {% endunless %}
+      <a href="{{ product.url | within: collection }}">
+        <img src="{{ product.featured_image.src | img_url: 'large' }}" alt="{{ product.featured_image.alt | escape }}">
+      </a>
+    </div>
+  {% else %}
+    <p>no matches</p>
+  {% endfor %}
+  {% if paginate.pages > 1 %}
+    {{ paginate | default_pagination }}
+  {% endif %}
+{% endpaginate %}
+
+{% schema %}
+  {
+    "name": "Title",
+    "class": "section-class",
+    "max_blocks": 2,
+    "settings": [
+      {
+        "type": "text",
+        "id": "text_id",
+        "label": "Type title text",
+        "default": " This is title"
+      }
+    ],
+    "blocks": [
+      {
+        "name": "Slide",
+        "type": "slide",
+        "settings": [
+          {
+            "type": "image_picker",
+            "id": "image_url",
+            "label": "Slide"
+          }
+        ]
+      }
+    ],
+    "presets": [
+      {
+        "name": "Slideshow",
+        "blocks": [
+          {
+            "type": "slide"
+          }, {
+            "type": "slide"
+          }
+        ]
+      }
+    ]
+
+
+  }
+{% endschema %}

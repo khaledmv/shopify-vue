@@ -1,0 +1,1 @@
+theme new --password=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 --store="webaiiid.myshopify.com" --name=themekit

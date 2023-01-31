@@ -1,0 +1,12 @@
+{{ content_for_index }}
+
+<ul>
+  {% for product in collections.t-shirt.products %}
+    <li>
+      <a href="{{ product.url }}">
+        <img src="{{ product.featured_image.src | img_url: 'medium' }}" alt="{{ product.title }}">
+        <h2>{{ product.title }}</h2>
+      </a>
+    </li>
+  {% endfor %}
+</ul>

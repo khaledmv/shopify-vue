@@ -1,0 +1,96 @@
+<div id="cart-page">
+
+  <div class="cart-item">
+
+
+    <template v-if="cart.items.length > 0">
+
+      <div class="cart-row" v-for="item in cart.items">
+        <div class="cart-item-title" v-html="item.title"></div>
+        <div class="cart-item-image">
+          <img :src="item.image">
+        </div>
+        <div class="cart-item-price" v-html="item.formatted_line_price"></div>
+        <label>
+          <input
+            type="number"
+            name=""
+            v-model="item.quantity"
+            @change="update_cart(item.variant_id, item.quantity)"
+            id="">
+        </label>
+        <div class="cart-item-remove" @click="remove_from_cart(item.variant_id)">Remove</div>
+      </div>
+
+    </template>
+    <template v-else>
+      Cart is empty
+    </template>
+
+  </div>
+
+  <div class="cart-sidebar">
+    <div class="cart-total" v-html="cart.formatted_total_price"></div>
+    <div class="cart-checkout">
+      <a href="/checkout">
+        Checkout Page</a>
+    </div>
+  </div>
+</div>
+
+
+<style>
+  .cart-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+  }
+</style>
+
+<script>
+  const cartPage = {
+    data() {
+      return {
+        currentCurrency:"{{  cart.currency.symbol  }}",
+        cart: {
+          items: []
+        }
+      }
+    },
+    created() {
+      $.get('/cart.js').then(res => JSON.parse(res)).then(cart => {
+        this.set_cart(cart);
+      })
+    },
+
+    methods: {
+      set_cart(cart) {
+        this.cart = cart;
+        this.format_prices();
+      },
+
+      update_cart(id, qty) {
+        $.post('/cart/update.js', `updates[${id}]=${qty}`).then(res => JSON.parse(res)).then(cart => {
+          this.set_cart(cart);
+        })
+      },
+
+      format_prices() {
+
+        this.cart.items.forEach(item => {
+          item.formatted_line_price = Shopify.formatMoney(item.line_price).replace('$', this.currentCurrency);
+        });
+        this.cart.formatted_total_price = Shopify.formatMoney(this.cart.total_price).replace('$', this.currentCurrency);
+
+      },
+
+      remove_from_cart(id) {
+        this.update_cart(id, 0);
+      }
+    }
+
+  }
+
+  Vue.createApp(cartPage).mount('#cart-page');
+</script>

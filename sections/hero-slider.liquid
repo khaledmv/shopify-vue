@@ -1,0 +1,37 @@
+<section class="hero_sliders">
+  <h1>
+    Hello world!
+  </h1>
+  {% if section.settings.sliderImage %}
+    <div class="slide" style="background-image: url( '{{ section.settings.sliderImage | img_url: 'medium' }}' );"></div>
+  {% endif %}
+
+</section>
+
+
+
+{% schema %}
+  {
+    "name": "Hero Slider",
+    "tag": "header",
+    "class": "hero_slider",
+    "settings": [
+      {
+        "type": "image_picker",
+        "id": "sliderImage",
+        "label": "Hero Text"
+      }
+    ]
+
+  }
+{% endschema %}
+
+
+{% style %}
+  .slide {
+    border: 2px solid red;
+    height: 200px;
+    background-size: cover;
+    background-position: center;
+  }
+{% endstyle %}

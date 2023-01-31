@@ -1,0 +1,15 @@
+
+{
+    "name": "404 template",
+    "wrapper": "div#404__template",
+    "sections": {
+        "main": {
+            "type": "main-404"
+        }
+    },
+
+    "order": [
+        "main"
+    ]
+
+}
