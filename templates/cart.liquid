@@ -1,34 +1,33 @@
-<div id="cart-page">
+<section id="cart-page">
 
-  <div class="cart-item">
+  <Transition name="fade">
+    <div class="cart-item" v-show="!loading">
+      <template v-if="cart.items.length > 0">
 
-
-    <template v-if="cart.items.length > 0">
-
-      <div class="cart-row" v-for="item in cart.items">
-        <div class="cart-item-title" v-html="item.title"></div>
-        <div class="cart-item-image">
-          <img :src="item.image">
+        <div class="cart-row" v-for="item in cart.items">
+          <div class="cart-item-title" v-html="item.title"></div>
+          <div class="cart-item-image">
+            <img :src="item.image">
+          </div>
+          <div class="cart-item-price" v-html="item.formatted_line_price"></div>
+          <label>
+            <input
+              type="number"
+              name=""
+              v-model="item.quantity"
+              @change="update_cart(item.variant_id, item.quantity)"
+              id="">
+          </label>
+          <div class="cart-item-remove" @click="remove_from_cart(item.variant_id)">Remove</div>
         </div>
-        <div class="cart-item-price" v-html="item.formatted_line_price"></div>
-        <label>
-          <input
-            type="number"
-            name=""
-            v-model="item.quantity"
-            @change="update_cart(item.variant_id, item.quantity)"
-            id="">
-        </label>
-        <div class="cart-item-remove" @click="remove_from_cart(item.variant_id)">Remove</div>
-      </div>
 
-    </template>
-    <template v-else>
-      Cart is empty
-    </template>
+      </template>
+      <template v-else>
+        Cart is empty
+      </template>
 
-  </div>
-
+    </div>
+  </Transition>
   <div class="cart-sidebar">
     <div class="cart-total" v-html="cart.formatted_total_price"></div>
     <div class="cart-checkout">
@@ -36,15 +35,76 @@
         Checkout Page</a>
     </div>
   </div>
-</div>
 
+  <div class="upcell">
+    <div class="upcell-title" v-if="filtered_upsells.length > 0">
+      <h1>You might also like..</h1>
+    </div>
+
+    <div class="cart-upsell-container">
+      <template v-for="(upsell, index) in filtered_upsells">
+        <div class="cart-upcell-item" v-if="index < 3">
+          <img :src="upsell.image" alt="upsell.title">
+          <div class="cart-upsell-title" v-html="upsell.title"></div>
+          <a class="cart-upcell-atc-btn btn-green" v-if="upsell.adding_upsells">Adding..</a>
+          <a
+            v-else
+            class="cart-upcell-atc-btn"
+            @click="add_to_cart(upsell.variant_id)">Add to cart</a>
+        </div>
+      </template>
+    </div>
+  </div>
+
+
+</section>
 
 <style>
+  .fade-enter-active,
+  .fade-leave-active {
+    transition: opacity 0.5s ease;
+  }
+
+  .fade-enter-from,
+  .fade-leave-to {
+    opacity: 0;
+  }
   .cart-row {
     display: flex;
     justify-content: center;
     align-items: center;
     gap: 20px;
+  }
+  .cart-upsell-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 30px;
+  }
+  .cart-upcell-item {
+    width: 20rem;
+    height: 20rem;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .cart-upcell-item img {
+    height: 100%;
+    object-fit: contain;
+  }
+
+
+  .cart-upcell-atc-btn {
+    cursor: pointer;
+    background-color: hsl(0, 0%, 40%);
+    padding: 8px 20px;
+  }
+
+  .btn-green {
+    background-color: rgb(98, 199, 98);
   }
 </style>
 
@@ -55,19 +115,40 @@
         currentCurrency:"{{  cart.currency.symbol  }}",
         cart: {
           items: []
-        }
+        },
+        upsells: [{% for product in collections['t-shirt'].products %}{
+              title: "{{ product.title  }}",
+              handle: "{{ product.handle }}",
+              image: "{{ product.featured_image | img_url: 'medium',scale2 }}",
+              product_id: "{{ product.id }}",
+              variant_id: "{{ product.selected_or_first_available_variant.id }}",
+              adding_upsells: false
+            },{% endfor %}],
+        loading: true
       }
     },
     created() {
-      $.get('/cart.js').then(res => JSON.parse(res)).then(cart => {
-        this.set_cart(cart);
-      })
+      this.get_cart();
+    },
+
+
+    computed: {
+      filtered_upsells() {
+        const products_in_cart = this.cart.items.map(item => item.product_id.toString());
+        return this.upsells.filter(upsell => ! products_in_cart.includes(upsell.product_id));
+      }
     },
 
     methods: {
+      get_cart() {
+        $.get('/cart.js').then(res => JSON.parse(res)).then(cart => {
+          this.set_cart(cart);
+        })
+      },
       set_cart(cart) {
         this.cart = cart;
         this.format_prices();
+        this.loading = false;
       },
 
       update_cart(id, qty) {
@@ -86,11 +167,30 @@
       },
 
       remove_from_cart(id) {
+        this.loading = true;
         this.update_cart(id, 0);
+      },
+
+      add_to_cart(id) {
+
+        const upsell = this.upsells.find(upsell => upsell.variant_id == id);
+        this.loading = true;
+        upsell.adding_upsells = true;
+        $.post('/cart/add.js', {
+          items: [
+            {
+              id,
+              quantity: 1
+            }
+          ]
+        }).then(res => JSON.parse(res)).then(items => {
+          this.get_cart();
+          upsell.adding_upsells = false;
+        })
       }
+
+
     }
-
   }
-
   Vue.createApp(cartPage).mount('#cart-page');
 </script>
